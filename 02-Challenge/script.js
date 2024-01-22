@@ -6,7 +6,10 @@ var question = document.getElementById("firstBox");
 var posibleAnswers = document.querySelector(".answerOp");
 var everyAnswer = document.querySelectorAll("#op1, #op2, #op3, #op4");
 var timeEl = document.getElementById("time");
+var nameInput = document.getElementById("playerName");
 var secondsLeft = 60;
+var saveNameBtn = document.getElementById("saveName");
+var clearNameBtn = document.getElementById("clearName");
 //the const, helps me declare a contsnt 'variable', so that its value cannot be reasigned again and allways applies thorugh the lifetime of the code.
 const answerOptions = document.querySelectorAll(".answerOp");
 
@@ -20,6 +23,7 @@ var q5 = ("How do you 'comment' when using JavaScript?")
 //this array gatters all the diferent functions to write each question, and by having this, i can u a 
 //'functionsQueue.shift', so every time someone click an option of the possible answers, the click returns to this 'const' and moves to the next one, until theres no more functions.
 const functionsQueue = [
+    endQuiz,
     changeQuestion1,
     changeQuestion2,
     changeQuestion3,
@@ -27,8 +31,10 @@ const functionsQueue = [
     changeQuestion5,
 ];
 
-//prevents the answer options to show from the beggining
+//prevents this variables to show from the beggining
 hideAnswers();
+hideInput();
+hideButtons();
 
 buttonStart.addEventListener("click", startQ);
 
@@ -81,20 +87,25 @@ function handleOptionClick(selectedOption) {
     executeFunctionsQueue();
 };
 
+//Store the correct answers in the finalScore as a string.
+
 var scoreData = { finalScore: 'value'};
 localStorage.setItem("finalScore", JSON.stringify(scoreData));
 
 function getCorrectAnswer(index) {
     switch (index) {
-        case 0: return "Yes";
-        case 1: return "var =";
-        case 2: return "function()";
-        case 3: return "var x = []";
-        case 4: return "//";
+        case 1: return "Yes";
+        case 2: return "var =";
+        case 3: return "function()";
+        case 4: return "var x = []";
+        case 5: return "//";
         default: return "";//works as a safety meassure in case there is an unexpected value.
     }
 }
 
+function hideInput() {
+    nameInput.style.display= "none";
+}
 //function to subtract time in the timer.
 function subtractTime(seconds) {
     secondsLeft = Math.max(0, secondsLeft - seconds); //this ensures that the count is not able to subtract less than 0.
@@ -118,7 +129,7 @@ function setTime() {
 
         if(secondsLeft === 0) {
             clearInterval(timerInterval);
-            // console.log("asdasd");
+            endQuiz();
         }
     }, 1000); //this second argument tells the time interval in miliseconds for the function to execute.
 };
@@ -191,17 +202,63 @@ function changeQuestion5() {
     });
 };
 
+function endQuiz() {
+    timeEl.style.display = "none";
+    hideAnswers();
+    nameInput.style.display = "block";
+    saveNameBtn.style.display = "block";
+    modifyContentById("firstBox", "Save your score!");
 
+    var playerName = document.getElementById("playerName").value;
+    var finalScore = localStorage.getItem("finalScore") || 0; //In case there is no finalScore, it will be 0.
+    var playerData = {
+        name: playerName,
+        score: finalScore
+    };
+    
+    localStorage.setItem("playerData", JSON.stringify(playerData));
+    modifyContentById("options", "Player: " + playerName + " | Score: " + finalScore);
+    question.style.display ="block";
+    
+};
 
+saveNameBtn.addEventListener("click", saveName); //event listener for the saveName button.
+clearNameBtn.addEventListener("click", clearName); //event listener for the clearName button.
 
+function saveName() {
+    var playerName = document.getElementById("playerName").value;
 
+    if (playerName.trim() === ""){
+        alert("Please enter your name before saving.");
+    } else {
+        localStorage.setItem("playerName", playerName);
+        alert("Name Saved: " + playerName);
+        scorePage();
+    }
+    }
 
+function clearName() {
+    localStorage.removeItem("playerName");
+    localStorage.removeItem("finalScore");
+    alert("Name Cleared");
+    modifyContentById("options", "Player: | Score: ");
+}
 
+function hideButtons() {
+    saveNameBtn.style.display = "none";
+    clearNameBtn.style.display = "none";
+}
 
-
-
-
-
-//1-identificar a que boton le pique de lasl respuestas
-//2- Al momento de estar llenando la vista, guardar en algun lado la respuesta correcta (trues)
-//3- Comparar si el boton presionado es el de la respuea correcta
+function scorePage() {
+    hideAnswers();
+    nameInput.style.display = "none";
+    question.style.display = "block";
+    posibleAnswers.style.display = "none";
+    saveNameBtn.style.display = "none";
+    clearNameBtn.style.display = "block";
+    modifyContentById("firstBox", "Record:");
+    optionsEl.style.display = "block";
+    everyAnswer.forEach(function(answer) {
+        answer.style.display ="none";
+    });
+};
