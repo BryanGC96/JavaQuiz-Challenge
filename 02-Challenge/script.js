@@ -1,9 +1,12 @@
 var buttonStart = document.querySelector("#start");
+var optionsEl = document.getElementById("options");
 var container1 = document.querySelector(".container");
 var startQ = startQuiz;
 var question = document.getElementById("firstBox");
 var posibleAnswers = document.querySelector(".answerOp");
 var everyAnswer = document.querySelectorAll("#op1, #op2, #op3, #op4");
+var timeEl = document.getElementById("time");
+var secondsLeft = 60;
 //the const, helps me declare a contsnt 'variable', so that its value cannot be reasigned again and allways applies thorugh the lifetime of the code.
 const answerOptions = document.querySelectorAll(".answerOp");
 
@@ -17,46 +20,109 @@ var q5 = ("How do you 'comment' when using JavaScript?")
 //this array gatters all the diferent functions to write each question, and by having this, i can u a 
 //'functionsQueue.shift', so every time someone click an option of the possible answers, the click returns to this 'const' and moves to the next one, until theres no more functions.
 const functionsQueue = [
+    changeQuestion1,
     changeQuestion2,
     changeQuestion3,
     changeQuestion4,
     changeQuestion5,
 ];
 
-
 //prevents the answer options to show from the beggining
 hideAnswers();
-
-//'forEach', helps me iterate over every element in the variable 'everyAnswer', and set all of them as display:none.
-function hideAnswers() {
-    everyAnswer.forEach(function(question){
-        question.style.display = "none";
-    })};
-
-function hideQuestion() {
-    document.getElementById("firstBox").style.display = "none";
-}
-
-function startQuiz() {
-    document.getElementById("firstBox").style.display = "none";
-    document.getElementById("options").style.display = "none";
-    buttonStart.style.display = "none";
-    changeQuestion1();
-};
 
 buttonStart.addEventListener("click", startQ);
 
 //change's the state of the <p>, to clicked, and hides the actual question and answer options.
 answerOptions.forEach(option => {
-    option.addEventListener('click', function() {
-        this.classList.toggle('clicked');
-        hideQuestion();
-        hideAnswers();
-        executeFunctionsQueue();
-        console.log("Evry fkn time");
-        // changeQuestion2();
+    option.addEventListener("click", function() {
+        handleOptionClick(this);
     });
 });
+
+//'forEach', helps me iterate over every element in the variable 'everyAnswer', and set all of them as display:none.
+function hideAnswers() {
+    everyAnswer.forEach(function(question) {
+        question.style.display = "none";
+    })};
+
+function startQuiz() {
+    hideQuestion();
+    hideAnswers();
+    buttonStart.style.display = "none";
+    optionsEl.style.display = "none";
+    executeFunctionsQueue();
+    setTime();
+};
+
+function hideQuestion() {
+    document.getElementById("firstBox").style.display = "none";
+}
+
+function handleOptionClick(selectedOption) {
+    var currentQuestionIndex = functionsQueue.length;
+    var correctAnswer = getCorrectAnswer(currentQuestionIndex).trim();
+
+    console.log("Selected Option:", selectedOption.innerText.trim());
+    console.log("Correct Answer:", correctAnswer);
+
+    if (selectedOption.innerText.trim() === correctAnswer) {
+        console.log("Correct Answer!");
+        var currentScore = localStorage.getItem("finalScore"); //retrives the final Score from the localStorage
+        // The question mark is a JavaScript conditional (ternary) operator, and it checks if currentScore is 'truthy' (that it has a value other than null, undefinded, 0, flase or an empty string.).
+        currentScore = isNaN(parseInt(currentScore)) ? 0 : parseInt(currentScore); //paseInt converts the string into a number/integer. Is NaN (not a number), checks if the content is a number.
+        currentScore += 1; //increment the score +1 every time
+        localStorage.setItem("finalScore", currentScore.toString());//stores a number in the key 'finalscore', every time there is a correct answer.
+    } else {
+        console.log("Incorrect Answer!");
+        subtractTime(10); //Calls the function that removes 10 seconds of the timer, every time they click and incorrect answer.
+    }
+    hideQuestion();
+    hideAnswers();
+    executeFunctionsQueue();
+};
+
+var scoreData = { finalScore: 'value'};
+localStorage.setItem("finalScore", JSON.stringify(scoreData));
+
+function getCorrectAnswer(index) {
+    switch (index) {
+        case 0: return "Yes";
+        case 1: return "var =";
+        case 2: return "function()";
+        case 3: return "var x = []";
+        case 4: return "//";
+        default: return "";//works as a safety meassure in case there is an unexpected value.
+    }
+}
+
+//function to subtract time in the timer.
+function subtractTime(seconds) {
+    secondsLeft = Math.max(0, secondsLeft - seconds); //this ensures that the count is not able to subtract less than 0.
+    timeEl.textContent = secondsLeft + "Seconds Left";
+}
+//To help read the answer clicked, this function iterates until theres no more questions, and help determine wich one is the correct one, considering it starts counting in 0 and not in 1.
+function executeFunctionsQueue() {
+    var currentQuestionIndex = functionsQueue.length - 1;
+
+    if (functionsQueue.length > 0) {
+        var currentFunction = functionsQueue[currentQuestionIndex];
+        currentFunction();
+        functionsQueue.pop();
+    };
+};
+
+function setTime() {
+    var timerInterval = setInterval(function() {
+        secondsLeft--;
+        timeEl.textContent = secondsLeft + " Seconds Left";
+
+        if(secondsLeft === 0) {
+            clearInterval(timerInterval);
+            // console.log("asdasd");
+        }
+    }, 1000); //this second argument tells the time interval in miliseconds for the function to execute.
+};
+
 
 function modifyContentById(id, newContent) {
     var elementId = document.getElementById(id);
@@ -125,10 +191,17 @@ function changeQuestion5() {
     });
 };
 
-//returns to the 'const', and check if  theres still availables ones, and run the next one until there are no more.
-function executeFunctionsQueue() {
-    if (functionsQueue.length > 0) {
-        const nextFunction = functionsQueue.shift();
-        nextFunction();
-    }
-}
+
+
+
+
+
+
+
+
+
+
+
+//1-identificar a que boton le pique de lasl respuestas
+//2- Al momento de estar llenando la vista, guardar en algun lado la respuesta correcta (trues)
+//3- Comparar si el boton presionado es el de la respuea correcta
