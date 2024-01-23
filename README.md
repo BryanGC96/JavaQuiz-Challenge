@@ -10,5 +10,5 @@ If you dont want to see the previous scores, you can clear them by pressing the 
 
 !["Image of the running application"](./Assets/419952760_389373760236346_9001351726012411827_n.png)
 
-To run the application you just need to open the URL:
+To run the application you just need to open the URL: https://bryangc96.github.io/JavaQuiz-Challenge 
 
