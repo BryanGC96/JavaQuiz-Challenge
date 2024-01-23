@@ -72,6 +72,10 @@ article {
     font-size: 25px;
 }
 
+.box >ul>li {
+    list-style:none;
+}
+
 /*design of the start button*/
 #start {
     border-radius: 9px;

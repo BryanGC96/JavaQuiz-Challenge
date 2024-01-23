@@ -10,6 +10,9 @@ var nameInput = document.getElementById("playerName");
 var secondsLeft = 60;
 var saveNameBtn = document.getElementById("saveName");
 var clearNameBtn = document.getElementById("clearName");
+var timerInterval;
+var historicalScores = JSON.parse(localStorage.getItem("highScores")) || [];
+var highScoreContainer = document.getElementById("highScore");
 //the const, helps me declare a contsnt 'variable', so that its value cannot be reasigned again and allways applies thorugh the lifetime of the code.
 const answerOptions = document.querySelectorAll(".answerOp");
 
@@ -35,6 +38,7 @@ const functionsQueue = [
 hideAnswers();
 hideInput();
 hideButtons();
+hideHighScore();
 
 buttonStart.addEventListener("click", startQ);
 
@@ -44,7 +48,9 @@ answerOptions.forEach(option => {
         handleOptionClick(this);
     });
 });
-
+function hideHighScore() {
+    highScoreContainer.style.display = "none";
+}
 //'forEach', helps me iterate over every element in the variable 'everyAnswer', and set all of them as display:none.
 function hideAnswers() {
     everyAnswer.forEach(function(question) {
@@ -88,7 +94,6 @@ function handleOptionClick(selectedOption) {
 };
 
 //Store the correct answers in the finalScore as a string.
-
 var scoreData = { finalScore: 'value'};
 localStorage.setItem("finalScore", JSON.stringify(scoreData));
 
@@ -119,15 +124,18 @@ function executeFunctionsQueue() {
         var currentFunction = functionsQueue[currentQuestionIndex];
         currentFunction();
         functionsQueue.pop();
-    };
+    } else {
+        clearInterval(timerInterval);
+    }
 };
 
 function setTime() {
-    var timerInterval = setInterval(function() {
+    timerInterval = setInterval(function() {
         secondsLeft--;
         timeEl.textContent = secondsLeft + " Seconds Left";
+        console.log ("secondsLeft", secondsLeft);
 
-        if(secondsLeft === 0) {
+        if(secondsLeft <= 0) {
             clearInterval(timerInterval);
             endQuiz();
         }
@@ -203,6 +211,7 @@ function changeQuestion5() {
 };
 
 function endQuiz() {
+    secondsLeft = 0;
     timeEl.style.display = "none";
     hideAnswers();
     nameInput.style.display = "block";
@@ -217,7 +226,6 @@ function endQuiz() {
     };
     
     localStorage.setItem("playerData", JSON.stringify(playerData));
-    modifyContentById("options", "Player: " + playerName + " | Score: " + finalScore);
     question.style.display ="block";
     
 };
@@ -226,12 +234,16 @@ saveNameBtn.addEventListener("click", saveName); //event listener for the saveNa
 clearNameBtn.addEventListener("click", clearName); //event listener for the clearName button.
 
 function saveName() {
+    var finalScore = localStorage.getItem("finalScore") || 0;
     var playerName = document.getElementById("playerName").value;
+    modifyContentById("options", "Player: " + playerName + " | Score: " + finalScore);
 
     if (playerName.trim() === ""){
         alert("Please enter your name before saving.");
     } else {
         localStorage.setItem("playerName", playerName);
+        historicalScores.push({name:playerName,score:finalScore});
+        localStorage.setItem("highScores", JSON.stringify(historicalScores));
         alert("Name Saved: " + playerName);
         scorePage();
     }
@@ -240,6 +252,8 @@ function saveName() {
 function clearName() {
     localStorage.removeItem("playerName");
     localStorage.removeItem("finalScore");
+    localStorage.removeItem("highScores");
+    highScoreContainer.innerHTML = "";
     alert("Name Cleared");
     modifyContentById("options", "Player: | Score: ");
 }
@@ -251,6 +265,7 @@ function hideButtons() {
 
 function scorePage() {
     hideAnswers();
+    renderHighScores();
     nameInput.style.display = "none";
     question.style.display = "block";
     posibleAnswers.style.display = "none";
@@ -262,3 +277,14 @@ function scorePage() {
         answer.style.display ="none";
     });
 };
+
+function renderHighScores() {
+    var ulEl = document.createElement("ul");
+    historicalScores.forEach(function(value, index) {
+        var liEl = document.createElement("li");
+        liEl.innerText = value.name + " " + value.score;
+        ulEl.appendChild(liEl);
+    })
+    highScoreContainer.appendChild(ulEl);
+    highScoreContainer.style.display = "block";
+}
